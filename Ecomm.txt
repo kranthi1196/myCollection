@@ -1,0 +1,4110 @@
+// Creating a production-ready demo for an eCommerce food delivery application using a microservices architecture
+// This project involves multiple microservices for User, Admin, Delivery, Order, and Restaurant management - 
+
+// Let's assume the following services:
+// 1 -  User Service (port 8081): Manages user registration, login, and profile - 
+// 2 -  Admin Service (port 8082): Manages restaurant approvals, admin controls 
+// 3 -  Restaurant Service (port 8083): Manages restaurant listings and menus 
+// 4 -  Order Service (port 8084): Manages order placement and status 
+// 5 -  Delivery Service (port 8085): Manages delivery assignments and tracking - 
+// 6 -  
+
+
+
+
+
+#Menu/Home - 8080
+
+#User - 8081
+
+#Admin - 8082
+
+#Restaurant - 8083
+
+#Product
+
+#Order - 8084
+
+#Faviourite 
+
+#Delivery - 8085
+
+#Payment 
+
+#Notification 
+
+#Inventory
+
+#Shipping
+
+#Cart
+
+#Search
+
+#Recommendations
+
+#Review & Rating
+
+#Wishlist
+
+#Analytics
+
+#Authentication & Autorization
+
+// Each service will have:
+// - Spring Boot as the framework
+// - Maven as the build tool
+// - OpenFeign for inter-service communication
+// - Eureka Discovery for service registration and discovery
+// - API Gateway for centralized API routing
+// - MySQL or H2 for database operations
+
+// I will provide the code for each service in their respective packages 
+// Let's begin with the Eureka Discovery Service (port 8761):
+
+// DiscoveryServerApplication - java
+package com - ecommerce - discovery;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - server - EnableEurekaServer;
+
+@SpringBootApplication
+@EnableEurekaServer
+public class DiscoveryServerApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(DiscoveryServerApplication - class, args);
+    }
+}
+
+// application - properties for Discovery Server
+spring - application - name=discovery-service
+server - port=8761
+
+# Eureka settings
+eureka - client - register-with-eureka=false
+eureka - client - fetch-registry=false
+eureka - server - enable-self-preservation=false
+
+// Once Discovery Server is running, all other microservices will register here - 
+// Now, let's define the User Service (example):
+
+// UserApplication - java
+package com - ecommerce - user;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+import org - springframework - web - bind - annotation - GetMapping;
+import org - springframework - web - bind - annotation - RestController;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class UserApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(UserApplication - class, args);
+    }
+}
+
+// UserController - java
+package com - ecommerce - user - controller;
+
+import org - springframework - web - bind - annotation - GetMapping;
+import org - springframework - web - bind - annotation - RestController;
+
+@RestController
+public class UserController {
+    @GetMapping("/user/welcome")
+    public String welcomeUser() {
+        return "Welcome to the User Service!";
+    }
+}
+
+// application - properties for User Service
+spring - application - name=user-service
+server - port=8081
+
+# Eureka settings
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+// Repeat similar setups for Admin, Restaurant, Order, and Delivery services 
+// Add OpenFeign for inter-service communication in relevant services 
+// Centralize all APIs in an API Gateway (port 8080) - 
+
+// API Gateway: ApiGatewayApplication - java
+package com - ecommerce - gateway;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+import org - springframework - cloud - gateway - config - EnableGateway;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class ApiGatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(ApiGatewayApplication - class, args);
+    }
+}
+
+// application - properties for API Gateway
+spring - application - name=api-gateway
+server - port=8080
+
+# Eureka settings
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+# Route Configurations (application - yml example)
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/user/**
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/order/**
+      discovery:
+        locator:
+          enabled: true
+
+// Ensure each service has proper configurations, entities, and database integrations 
+
+
+
+
+----------------------------------------------------------------------
+#User
+can you please provide me a code for user management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete User Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// UserApplication - java
+package com - ecommerce - user;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class UserApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(UserApplication - class, args);
+    }
+}
+
+// UserController - java
+package com - ecommerce - user - controller;
+
+import com - ecommerce - user - model - User;
+import com - ecommerce - user - service - UserService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/user")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    // Create a new user
+    @PostMapping("/register")
+    public ResponseEntity<User> registerUser(@RequestBody User user) {
+        return ResponseEntity - ok(userService - registerUser(user));
+    }
+
+    // Login user
+    @PostMapping("/login")
+    public ResponseEntity<String> loginUser(@RequestParam String email, @RequestParam String password) {
+        return ResponseEntity - ok(userService - loginUser(email, password));
+    }
+
+    // Get user by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+        return ResponseEntity - ok(userService - getUserById(id));
+    }
+
+    // Get all users
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity - ok(userService - getAllUsers());
+    }
+
+    // Update user details
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+        return ResponseEntity - ok(userService - updateUser(id, user));
+    }
+
+    // Delete user
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService - deleteUser(id);
+        return ResponseEntity - ok("User deleted successfully");
+    }
+}
+
+// UserService - java
+package com - ecommerce - user - service;
+
+import com - ecommerce - user - model - User;
+import com - ecommerce - user - repository - UserRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+import java - util - Optional;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public User registerUser(User user) {
+        return userRepository - save(user);
+    }
+
+    public String loginUser(String email, String password) {
+        Optional<User> user = userRepository - findByEmailAndPassword(email, password);
+        if (user - isPresent()) {
+            return "Login successful!";
+        } else {
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
+
+    public User getUserById(Long id) {
+        return userRepository - findById(id) - orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository - findAll();
+    }
+
+    public User updateUser(Long id, User updatedUser) {
+        User existingUser = getUserById(id);
+        existingUser - setName(updatedUser - getName());
+        existingUser - setEmail(updatedUser - getEmail());
+        existingUser - setPassword(updatedUser - getPassword());
+        return userRepository - save(existingUser);
+    }
+
+    public void deleteUser(Long id) {
+        userRepository - deleteById(id);
+    }
+}
+
+// User - java (Entity)
+package com - ecommerce - user - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this password = password;
+    }
+}
+
+// UserRepository - java
+package com - ecommerce - user - repository;
+
+import com - ecommerce - user - model - User;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+import java - util - Optional;
+
+@Repository
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmailAndPassword(String email, String password);
+}
+
+// application - properties
+spring - application - name=user-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+--------------------------------------------------------------------------
+
+#Admin
+can you please provide me a code for Admin management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Admin Management Microservice for an eCommerce Food Delivery Application on Port 8082
+
+// AdminApplication - java
+package com - ecommerce - admin;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class AdminApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(AdminApplication - class, args);
+    }
+}
+
+// AdminController - java
+package com - ecommerce - admin - controller;
+
+import com - ecommerce - admin - model - Admin;
+import com - ecommerce - admin - service - AdminService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/admin")
+public class AdminController {
+
+    @Autowired
+    private AdminService adminService;
+
+    // Create a new admin
+    @PostMapping("/register")
+    public ResponseEntity<Admin> registerAdmin(@RequestBody Admin admin) {
+        return ResponseEntity - ok(adminService - registerAdmin(admin));
+    }
+
+    // Login admin
+    @PostMapping("/login")
+    public ResponseEntity<String> loginAdmin(@RequestParam String email, @RequestParam String password) {
+        return ResponseEntity - ok(adminService - loginAdmin(email, password));
+    }
+
+    // Get admin by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Admin> getAdminById(@PathVariable Long id) {
+        return ResponseEntity - ok(adminService - getAdminById(id));
+    }
+
+    // Get all admins
+    @GetMapping("/all")
+    public ResponseEntity<List<Admin>> getAllAdmins() {
+        return ResponseEntity - ok(adminService - getAllAdmins());
+    }
+
+    // Update admin details
+    @PutMapping("/{id}")
+    public ResponseEntity<Admin> updateAdmin(@PathVariable Long id, @RequestBody Admin admin) {
+        return ResponseEntity - ok(adminService - updateAdmin(id, admin));
+    }
+
+    // Delete admin
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteAdmin(@PathVariable Long id) {
+        adminService - deleteAdmin(id);
+        return ResponseEntity - ok("Admin deleted successfully");
+    }
+}
+
+// AdminService - java
+package com - ecommerce - admin - service;
+
+import com - ecommerce - admin - model - Admin;
+import com - ecommerce - admin - repository - AdminRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+import java - util - Optional;
+
+@Service
+public class AdminService {
+
+    @Autowired
+    private AdminRepository adminRepository;
+
+    public Admin registerAdmin(Admin admin) {
+        return adminRepository - save(admin);
+    }
+
+    public String loginAdmin(String email, String password) {
+        Optional<Admin> admin = adminRepository - findByEmailAndPassword(email, password);
+        if (admin - isPresent()) {
+            return "Login successful!";
+        } else {
+            throw new RuntimeException("Invalid credentials");
+        }
+    }
+
+    public Admin getAdminById(Long id) {
+        return adminRepository - findById(id) - orElseThrow(() -> new RuntimeException("Admin not found"));
+    }
+
+    public List<Admin> getAllAdmins() {
+        return adminRepository - findAll();
+    }
+
+    public Admin updateAdmin(Long id, Admin updatedAdmin) {
+        Admin existingAdmin = getAdminById(id);
+        existingAdmin - setName(updatedAdmin - getName());
+        existingAdmin - setEmail(updatedAdmin - getEmail());
+        existingAdmin - setPassword(updatedAdmin - getPassword());
+        return adminRepository - save(existingAdmin);
+    }
+
+    public void deleteAdmin(Long id) {
+        adminRepository - deleteById(id);
+    }
+}
+
+// Admin - java (Entity)
+package com - ecommerce - admin - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "admins")
+public class Admin {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
+    private String password;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this password = password;
+    }
+}
+
+// AdminRepository - java
+package com - ecommerce - admin - repository;
+
+import com - ecommerce - admin - model - Admin;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+import java - util - Optional;
+
+@Repository
+public interface AdminRepository extends JpaRepository<Admin, Long> {
+    Optional<Admin> findByEmailAndPassword(String email, String password);
+}
+
+// application - properties
+spring - application - name=admin-service
+server - port=8082
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+-----------------------------------------------------------------------------------------
+
+#Restaurant
+can you please provide me a code for Restaurant management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Restaurant Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// RestaurantApplication - java
+package com - ecommerce - restaurant;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class RestaurantApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(RestaurantApplication - class, args);
+    }
+}
+
+// RestaurantController - java
+package com - ecommerce - restaurant - controller;
+
+import com - ecommerce - restaurant - model - Restaurant;
+import com - ecommerce - restaurant - service - RestaurantService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/restaurant")
+public class RestaurantController {
+
+    @Autowired
+    private RestaurantService restaurantService;
+
+    // Add a new restaurant
+    @PostMapping("/add")
+    public ResponseEntity<Restaurant> addRestaurant(@RequestBody Restaurant restaurant) {
+        return ResponseEntity - ok(restaurantService - addRestaurant(restaurant));
+    }
+
+    // Get a restaurant by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Restaurant> getRestaurantById(@PathVariable Long id) {
+        return ResponseEntity - ok(restaurantService - getRestaurantById(id));
+    }
+
+    // Get all restaurants
+    @GetMapping("/all")
+    public ResponseEntity<List<Restaurant>> getAllRestaurants() {
+        return ResponseEntity - ok(restaurantService - getAllRestaurants());
+    }
+
+    // Update restaurant details
+    @PutMapping("/{id}")
+    public ResponseEntity<Restaurant> updateRestaurant(@PathVariable Long id, @RequestBody Restaurant restaurant) {
+        return ResponseEntity - ok(restaurantService - updateRestaurant(id, restaurant));
+    }
+
+    // Delete a restaurant
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteRestaurant(@PathVariable Long id) {
+        restaurantService - deleteRestaurant(id);
+        return ResponseEntity - ok("Restaurant deleted successfully");
+    }
+}
+
+// RestaurantService - java
+package com - ecommerce - restaurant - service;
+
+import com - ecommerce - restaurant - model - Restaurant;
+import com - ecommerce - restaurant - repository - RestaurantRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class RestaurantService {
+
+    @Autowired
+    private RestaurantRepository restaurantRepository;
+
+    public Restaurant addRestaurant(Restaurant restaurant) {
+        return restaurantRepository - save(restaurant);
+    }
+
+    public Restaurant getRestaurantById(Long id) {
+        return restaurantRepository - findById(id) - orElseThrow(() -> new RuntimeException("Restaurant not found"));
+    }
+
+    public List<Restaurant> getAllRestaurants() {
+        return restaurantRepository - findAll();
+    }
+
+    public Restaurant updateRestaurant(Long id, Restaurant updatedRestaurant) {
+        Restaurant existingRestaurant = getRestaurantById(id);
+        existingRestaurant - setName(updatedRestaurant - getName());
+        existingRestaurant - setLocation(updatedRestaurant - getLocation());
+        existingRestaurant - setCuisine(updatedRestaurant - getCuisine());
+        existingRestaurant - setRating(updatedRestaurant - getRating());
+        return restaurantRepository - save(existingRestaurant);
+    }
+
+    public void deleteRestaurant(Long id) {
+        restaurantRepository - deleteById(id);
+    }
+}
+
+// Restaurant - java (Entity)
+package com - ecommerce - restaurant - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "restaurants")
+public class Restaurant {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
+    private String location;
+
+    @Column(nullable = false)
+    private String cuisine;
+
+    @Column
+    private Double rating;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this location = location;
+    }
+
+    public String getCuisine() {
+        return cuisine;
+    }
+
+    public void setCuisine(String cuisine) {
+        this cuisine = cuisine;
+    }
+
+    public Double getRating() {
+        return rating;
+    }
+
+    public void setRating(Double rating) {
+        this rating = rating;
+    }
+}
+
+// RestaurantRepository - java
+package com - ecommerce - restaurant - repository;
+
+import com - ecommerce - restaurant - model - Restaurant;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
+}
+
+// application - properties
+spring - application - name=restaurant-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+---------------------------------------------------------------------------------------------------
+
+#Order 
+can you please provide me a code for Order management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Order Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// OrderApplication - java
+package com - ecommerce - order;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class OrderApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(OrderApplication - class, args);
+    }
+}
+
+// OrderController - java
+package com - ecommerce - order - controller;
+
+import com - ecommerce - order - model - Order;
+import com - ecommerce - order - service - OrderService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/order")
+public class OrderController {
+
+    @Autowired
+    private OrderService orderService;
+
+    // Place a new order
+    @PostMapping("/place")
+    public ResponseEntity<Order> placeOrder(@RequestBody Order order) {
+        return ResponseEntity - ok(orderService - placeOrder(order));
+    }
+
+    // Get an order by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
+        return ResponseEntity - ok(orderService - getOrderById(id));
+    }
+
+    // Get all orders
+    @GetMapping("/all")
+    public ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity - ok(orderService - getAllOrders());
+    }
+
+    // Update an order
+    @PutMapping("/{id}")
+    public ResponseEntity<Order> updateOrder(@PathVariable Long id, @RequestBody Order order) {
+        return ResponseEntity - ok(orderService - updateOrder(id, order));
+    }
+
+    // Cancel an order
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long id) {
+        orderService - cancelOrder(id);
+        return ResponseEntity - ok("Order canceled successfully");
+    }
+}
+
+// OrderService - java
+package com - ecommerce - order - service;
+
+import com - ecommerce - order - model - Order;
+import com - ecommerce - order - repository - OrderRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class OrderService {
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public Order placeOrder(Order order) {
+        return orderRepository - save(order);
+    }
+
+    public Order getOrderById(Long id) {
+        return orderRepository - findById(id) - orElseThrow(() -> new RuntimeException("Order not found"));
+    }
+
+    public List<Order> getAllOrders() {
+        return orderRepository - findAll();
+    }
+
+    public Order updateOrder(Long id, Order updatedOrder) {
+        Order existingOrder = getOrderById(id);
+        existingOrder - setStatus(updatedOrder - getStatus());
+        existingOrder - setTotalPrice(updatedOrder - getTotalPrice());
+        existingOrder - setItems(updatedOrder - getItems());
+        return orderRepository - save(existingOrder);
+    }
+
+    public void cancelOrder(Long id) {
+        orderRepository - deleteById(id);
+    }
+}
+
+// Order - java (Entity)
+package com - ecommerce - order - model;
+
+import jakarta - persistence - *;
+import java - util - List;
+
+@Entity
+@Table(name = "orders")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String customerId;
+
+    @Column(nullable = false)
+    private String restaurantId;
+
+    @ElementCollection
+    @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
+    private List<String> items;
+
+    @Column(nullable = false)
+    private Double totalPrice;
+
+    @Column(nullable = false)
+    private String status; // e - g - , PENDING, CONFIRMED, DELIVERED, CANCELED
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(String customerId) {
+        this customerId = customerId;
+    }
+
+    public String getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(String restaurantId) {
+        this restaurantId = restaurantId;
+    }
+
+    public List<String> getItems() {
+        return items;
+    }
+
+    public void setItems(List<String> items) {
+        this items = items;
+    }
+
+    public Double getTotalPrice() {
+        return totalPrice;
+    }
+
+    public void setTotalPrice(Double totalPrice) {
+        this totalPrice = totalPrice;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this status = status;
+    }
+}
+
+// OrderRepository - java
+package com - ecommerce - order - repository;
+
+import com - ecommerce - order - model - Order;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface OrderRepository extends JpaRepository<Order, Long> {
+}
+
+// application - properties
+spring - application - name=order-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+---------------------------------------------------------
+#Delivery 
+can you please provide me a code for Delivery management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Delivery Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// DeliveryApplication - java
+package com - ecommerce - delivery;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class DeliveryApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(DeliveryApplication - class, args);
+    }
+}
+
+// DeliveryController - java
+package com - ecommerce - delivery - controller;
+
+import com - ecommerce - delivery - model - Delivery;
+import com - ecommerce - delivery - service - DeliveryService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/delivery")
+public class DeliveryController {
+
+    @Autowired
+    private DeliveryService deliveryService;
+
+    // Assign a delivery
+    @PostMapping("/assign")
+    public ResponseEntity<Delivery> assignDelivery(@RequestBody Delivery delivery) {
+        return ResponseEntity - ok(deliveryService - assignDelivery(delivery));
+    }
+
+    // Get delivery details by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Delivery> getDeliveryById(@PathVariable Long id) {
+        return ResponseEntity - ok(deliveryService - getDeliveryById(id));
+    }
+
+    // Get all deliveries
+    @GetMapping("/all")
+    public ResponseEntity<List<Delivery>> getAllDeliveries() {
+        return ResponseEntity - ok(deliveryService - getAllDeliveries());
+    }
+
+    // Update delivery status
+    @PutMapping("/{id}")
+    public ResponseEntity<Delivery> updateDeliveryStatus(@PathVariable Long id, @RequestBody Delivery delivery) {
+        return ResponseEntity - ok(deliveryService - updateDeliveryStatus(id, delivery));
+    }
+
+    // Cancel a delivery
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> cancelDelivery(@PathVariable Long id) {
+        deliveryService - cancelDelivery(id);
+        return ResponseEntity - ok("Delivery canceled successfully");
+    }
+}
+
+// DeliveryService - java
+package com - ecommerce - delivery - service;
+
+import com - ecommerce - delivery - model - Delivery;
+import com - ecommerce - delivery - repository - DeliveryRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class DeliveryService {
+
+    @Autowired
+    private DeliveryRepository deliveryRepository;
+
+    public Delivery assignDelivery(Delivery delivery) {
+        return deliveryRepository - save(delivery);
+    }
+
+    public Delivery getDeliveryById(Long id) {
+        return deliveryRepository - findById(id) - orElseThrow(() -> new RuntimeException("Delivery not found"));
+    }
+
+    public List<Delivery> getAllDeliveries() {
+        return deliveryRepository - findAll();
+    }
+
+    public Delivery updateDeliveryStatus(Long id, Delivery updatedDelivery) {
+        Delivery existingDelivery = getDeliveryById(id);
+        existingDelivery - setStatus(updatedDelivery - getStatus());
+        existingDelivery - setDeliveryTime(updatedDelivery - getDeliveryTime());
+        return deliveryRepository - save(existingDelivery);
+    }
+
+    public void cancelDelivery(Long id) {
+        deliveryRepository - deleteById(id);
+    }
+}
+
+// Delivery - java (Entity)
+package com - ecommerce - delivery - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "deliveries")
+public class Delivery {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String orderId;
+
+    @Column(nullable = false)
+    private String deliveryAgentId;
+
+    @Column(nullable = false)
+    private String status; // e - g - , ASSIGNED, IN_PROGRESS, COMPLETED, CANCELED
+
+    @Column(nullable = true)
+    private String deliveryTime; // Optional, e - g - , "2025-01-24 15:30"
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this orderId = orderId;
+    }
+
+    public String getDeliveryAgentId() {
+        return deliveryAgentId;
+    }
+
+    public void setDeliveryAgentId(String deliveryAgentId) {
+        this deliveryAgentId = deliveryAgentId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this status = status;
+    }
+
+    public String getDeliveryTime() {
+        return deliveryTime;
+    }
+
+    public void setDeliveryTime(String deliveryTime) {
+        this deliveryTime = deliveryTime;
+    }
+}
+
+// DeliveryRepository - java
+package com - ecommerce - delivery - repository;
+
+import com - ecommerce - delivery - model - Delivery;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
+}
+
+// application - properties
+spring - application - name=delivery-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------
+#Product
+can you please provide me a code for Product management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Product Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// ProductApplication - java
+package com - ecommerce - product;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class ProductApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(ProductApplication - class, args);
+    }
+}
+
+// ProductController - java
+package com - ecommerce - product - controller;
+
+import com - ecommerce - product - model - Product;
+import com - ecommerce - product - service - ProductService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    @Autowired
+    private ProductService productService;
+
+    // Add a new product
+    @PostMapping("/add")
+    public ResponseEntity<Product> addProduct(@RequestBody Product product) {
+        return ResponseEntity - ok(productService - addProduct(product));
+    }
+
+    // Get product by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+        return ResponseEntity - ok(productService - getProductById(id));
+    }
+
+    // Get all products
+    @GetMapping("/all")
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity - ok(productService - getAllProducts());
+    }
+
+    // Update product details
+    @PutMapping("/{id}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+        return ResponseEntity - ok(productService - updateProduct(id, product));
+    }
+
+    // Delete product by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
+        productService - deleteProduct(id);
+        return ResponseEntity - ok("Product deleted successfully");
+    }
+}
+
+// ProductService - java
+package com - ecommerce - product - service;
+
+import com - ecommerce - product - model - Product;
+import com - ecommerce - product - repository - ProductRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class ProductService {
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    public Product addProduct(Product product) {
+        return productRepository - save(product);
+    }
+
+    public Product getProductById(Long id) {
+        return productRepository - findById(id) - orElseThrow(() -> new RuntimeException("Product not found"));
+    }
+
+    public List<Product> getAllProducts() {
+        return productRepository - findAll();
+    }
+
+    public Product updateProduct(Long id, Product updatedProduct) {
+        Product existingProduct = getProductById(id);
+        existingProduct - setName(updatedProduct - getName());
+        existingProduct - setDescription(updatedProduct - getDescription());
+        existingProduct - setPrice(updatedProduct - getPrice());
+        existingProduct - setCategory(updatedProduct - getCategory());
+        existingProduct - setStock(updatedProduct - getStock());
+        return productRepository - save(existingProduct);
+    }
+
+    public void deleteProduct(Long id) {
+        productRepository - deleteById(id);
+    }
+}
+
+// Product - java (Entity)
+package com - ecommerce - product - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "products")
+public class Product {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = true)
+    private String description;
+
+    @Column(nullable = false)
+    private Double price;
+
+    @Column(nullable = false)
+    private String category;
+
+    @Column(nullable = false)
+    private Integer stock;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this description = description;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this price = price;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this category = category;
+    }
+
+    public Integer getStock() {
+        return stock;
+    }
+
+    public void setStock(Integer stock) {
+        this stock = stock;
+    }
+}
+
+// ProductRepository - java
+package com - ecommerce - product - repository;
+
+import com - ecommerce - product - model - Product;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {
+}
+
+// application - properties
+spring - application - name=product-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Payment 
+can you please provide me a code for Payment management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Payment Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// PaymentApplication - java
+package com - ecommerce - payment;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class PaymentApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(PaymentApplication - class, args);
+    }
+}
+
+// PaymentController - java
+package com - ecommerce - payment - controller;
+
+import com - ecommerce - payment - model - Payment;
+import com - ecommerce - payment - service - PaymentService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/payments")
+public class PaymentController {
+
+    @Autowired
+    private PaymentService paymentService;
+
+    // Process a new payment
+    @PostMapping("/process")
+    public ResponseEntity<Payment> processPayment(@RequestBody Payment payment) {
+        return ResponseEntity - ok(paymentService - processPayment(payment));
+    }
+
+    // Get payment by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {
+        return ResponseEntity - ok(paymentService - getPaymentById(id));
+    }
+
+    // Get all payments
+    @GetMapping("/all")
+    public ResponseEntity<List<Payment>> getAllPayments() {
+        return ResponseEntity - ok(paymentService - getAllPayments());
+    }
+
+    // Update payment status
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Payment> updatePaymentStatus(@PathVariable Long id, @RequestBody String status) {
+        return ResponseEntity - ok(paymentService - updatePaymentStatus(id, status));
+    }
+
+    // Delete payment by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePayment(@PathVariable Long id) {
+        paymentService - deletePayment(id);
+        return ResponseEntity - ok("Payment deleted successfully");
+    }
+}
+
+// PaymentService - java
+package com - ecommerce - payment - service;
+
+import com - ecommerce - payment - model - Payment;
+import com - ecommerce - payment - repository - PaymentRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class PaymentService {
+
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    public Payment processPayment(Payment payment) {
+        return paymentRepository - save(payment);
+    }
+
+    public Payment getPaymentById(Long id) {
+        return paymentRepository - findById(id) - orElseThrow(() -> new RuntimeException("Payment not found"));
+    }
+
+    public List<Payment> getAllPayments() {
+        return paymentRepository - findAll();
+    }
+
+    public Payment updatePaymentStatus(Long id, String status) {
+        Payment existingPayment = getPaymentById(id);
+        existingPayment - setStatus(status);
+        return paymentRepository - save(existingPayment);
+    }
+
+    public void deletePayment(Long id) {
+        paymentRepository - deleteById(id);
+    }
+}
+
+// Payment - java (Entity)
+package com - ecommerce - payment - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "payments")
+public class Payment {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String orderId;
+
+    @Column(nullable = false)
+    private Double amount;
+
+    @Column(nullable = false)
+    private String method;
+
+    @Column(nullable = false)
+    private String status;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this orderId = orderId;
+    }
+
+    public Double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(Double amount) {
+        this amount = amount;
+    }
+
+    public String getMethod() {
+        return method;
+    }
+
+    public void setMethod(String method) {
+        this method = method;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this status = status;
+    }
+}
+
+// PaymentRepository - java
+package com - ecommerce - payment - repository;
+
+import com - ecommerce - payment - model - Payment;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+}
+
+// application - properties
+spring - application - name=payment-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Notification 
+can you please provide me a code for notification management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Notification Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// NotificationApplication - java
+package com - ecommerce - notification;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class NotificationApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(NotificationApplication - class, args);
+    }
+}
+
+// NotificationController - java
+package com - ecommerce - notification - controller;
+
+import com - ecommerce - notification - model - Notification;
+import com - ecommerce - notification - service - NotificationService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/notifications")
+public class NotificationController {
+
+    @Autowired
+    private NotificationService notificationService;
+
+    // Send a new notification
+    @PostMapping("/send")
+    public ResponseEntity<Notification> sendNotification(@RequestBody Notification notification) {
+        return ResponseEntity - ok(notificationService - sendNotification(notification));
+    }
+
+    // Get notification by ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Notification> getNotificationById(@PathVariable Long id) {
+        return ResponseEntity - ok(notificationService - getNotificationById(id));
+    }
+
+    // Get all notifications
+    @GetMapping("/all")
+    public ResponseEntity<List<Notification>> getAllNotifications() {
+        return ResponseEntity - ok(notificationService - getAllNotifications());
+    }
+
+    // Delete notification by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteNotification(@PathVariable Long id) {
+        notificationService - deleteNotification(id);
+        return ResponseEntity - ok("Notification deleted successfully");
+    }
+}
+
+// NotificationService - java
+package com - ecommerce - notification - service;
+
+import com - ecommerce - notification - model - Notification;
+import com - ecommerce - notification - repository - NotificationRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class NotificationService {
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    public Notification sendNotification(Notification notification) {
+        notification - setStatus("SENT");
+        return notificationRepository - save(notification);
+    }
+
+    public Notification getNotificationById(Long id) {
+        return notificationRepository - findById(id) - orElseThrow(() -> new RuntimeException("Notification not found"));
+    }
+
+    public List<Notification> getAllNotifications() {
+        return notificationRepository - findAll();
+    }
+
+    public void deleteNotification(Long id) {
+        notificationRepository - deleteById(id);
+    }
+}
+
+// Notification - java (Entity)
+package com - ecommerce - notification - model;
+
+import jakarta - persistence - *;
+import java - time - LocalDateTime;
+
+@Entity
+@Table(name = "notifications")
+public class Notification {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String recipient;
+
+    @Column(nullable = false)
+    private String message;
+
+    @Column(nullable = false)
+    private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private String status;
+
+    // Constructor to set timestamp automatically
+    public Notification() {
+        this timestamp = LocalDateTime - now();
+    }
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getRecipient() {
+        return recipient;
+    }
+
+    public void setRecipient(String recipient) {
+        this recipient = recipient;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this message = message;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this timestamp = timestamp;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this status = status;
+    }
+}
+
+// NotificationRepository - java
+package com - ecommerce - notification - repository;
+
+import com - ecommerce - notification - model - Notification;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
+}
+
+// application - properties
+spring - application - name=notification-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+-----------------------------------------------------------------------
+
+#Faviourite 
+can you please provide me a code for Faviourites management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Favourites Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// FavouritesApplication - java
+package com - ecommerce - favourites;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class FavouritesApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(FavouritesApplication - class, args);
+    }
+}
+
+// FavouritesController - java
+package com - ecommerce - favourites controller;
+
+import com - ecommerce - favourites model - Favourite;
+import com - ecommerce - favourites service - FavouritesService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/favourites")
+public class FavouritesController {
+
+    @Autowired
+    private FavouritesService favouritesService;
+
+    // Add an item to favourites
+    @PostMapping("/add")
+    public ResponseEntity<Favourite> addFavourite(@RequestBody Favourite favourite) {
+        return ResponseEntity - ok(favouritesService - addFavourite(favourite));
+    }
+
+    // Get favourite items by user ID
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Favourite>> getFavouritesByUserId(@PathVariable String userId) {
+        return ResponseEntity - ok(favouritesService - getFavouritesByUserId(userId));
+    }
+
+    // Delete a favourite item
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteFavourite(@PathVariable Long id) {
+        favouritesService - deleteFavourite(id);
+        return ResponseEntity - ok("Favourite item deleted successfully");
+    }
+
+    // Get all favourites
+    @GetMapping("/all")
+    public ResponseEntity<List<Favourite>> getAllFavourites() {
+        return ResponseEntity - ok(favouritesService - getAllFavourites());
+    }
+}
+
+// FavouritesService - java
+package com - ecommerce - favourites service;
+
+import com - ecommerce - favourites model - Favourite;
+import com - ecommerce - favourites repository - FavouritesRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class FavouritesService {
+
+    @Autowired
+    private FavouritesRepository favouritesRepository;
+
+    public Favourite addFavourite(Favourite favourite) {
+        return favouritesRepository - save(favourite);
+    }
+
+    public List<Favourite> getFavouritesByUserId(String userId) {
+        return favouritesRepository - findByUserId(userId);
+    }
+
+    public void deleteFavourite(Long id) {
+        favouritesRepository - deleteById(id);
+    }
+
+    public List<Favourite> getAllFavourites() {
+        return favouritesRepository - findAll();
+    }
+}
+
+// Favourite - java (Entity)
+package com - ecommerce - favourites model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "favourites")
+public class Favourite {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String userId;
+
+    @Column(nullable = false)
+    private String itemId;
+
+    @Column(nullable = false)
+    private String itemName;
+
+    @Column(nullable = false)
+    private String restaurantName;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this userId = userId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this itemId = itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this itemName = itemName;
+    }
+
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this restaurantName = restaurantName;
+    }
+}
+
+// FavouritesRepository - java
+package com - ecommerce - favourites repository;
+
+import com - ecommerce - favourites model - Favourite;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+import java - util - List;
+
+@Repository
+public interface FavouritesRepository extends JpaRepository<Favourite, Long> {
+    List<Favourite> findByUserId(String userId);
+}
+
+// application - properties
+spring - application - name=favourites-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Inventory
+can you please provide me a code for Inventory management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Inventory Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// InventoryApplication - java
+package com - ecommerce - inventory;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class InventoryApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(InventoryApplication - class, args);
+    }
+}
+
+// InventoryController - java
+package com - ecommerce - inventory - controller;
+
+import com - ecommerce - inventory - model - Inventory;
+import com - ecommerce - inventory - service - InventoryService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/inventory")
+public class InventoryController {
+
+    @Autowired
+    private InventoryService inventoryService;
+
+    // Add or update inventory
+    @PostMapping("/add")
+    public ResponseEntity<Inventory> addOrUpdateInventory(@RequestBody Inventory inventory) {
+        return ResponseEntity - ok(inventoryService - addOrUpdateInventory(inventory));
+    }
+
+    // Get inventory by item ID
+    @GetMapping("/{itemId}")
+    public ResponseEntity<Inventory> getInventoryByItemId(@PathVariable String itemId) {
+        return ResponseEntity - ok(inventoryService - getInventoryByItemId(itemId));
+    }
+
+    // Get all inventory items
+    @GetMapping("/all")
+    public ResponseEntity<List<Inventory>> getAllInventory() {
+        return ResponseEntity - ok(inventoryService - getAllInventory());
+    }
+
+    // Delete inventory by item ID
+    @DeleteMapping("/delete/{itemId}")
+    public ResponseEntity<String> deleteInventory(@PathVariable String itemId) {
+        inventoryService - deleteInventory(itemId);
+        return ResponseEntity - ok("Inventory deleted successfully");
+    }
+}
+
+// InventoryService - java
+package com - ecommerce - inventory - service;
+
+import com - ecommerce - inventory - model - Inventory;
+import com - ecommerce - inventory - repository - InventoryRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class InventoryService {
+
+    @Autowired
+    private InventoryRepository inventoryRepository;
+
+    public Inventory addOrUpdateInventory(Inventory inventory) {
+        return inventoryRepository - save(inventory);
+    }
+
+    public Inventory getInventoryByItemId(String itemId) {
+        return inventoryRepository - findById(itemId) - orElseThrow(() -> new RuntimeException("Inventory item not found"));
+    }
+
+    public List<Inventory> getAllInventory() {
+        return inventoryRepository - findAll();
+    }
+
+    public void deleteInventory(String itemId) {
+        inventoryRepository - deleteById(itemId);
+    }
+}
+
+// Inventory - java (Entity)
+package com - ecommerce - inventory - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "inventory")
+public class Inventory {
+
+    @Id
+    private String itemId;
+
+    @Column(nullable = false)
+    private String itemName;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false)
+    private double price;
+
+    @Column(nullable = false)
+    private String restaurantName;
+
+    // Getters and Setters
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this itemId = itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this itemName = itemName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this quantity = quantity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this price = price;
+    }
+
+    public String getRestaurantName() {
+        return restaurantName;
+    }
+
+    public void setRestaurantName(String restaurantName) {
+        this restaurantName = restaurantName;
+    }
+}
+
+// InventoryRepository - java
+package com - ecommerce - inventory - repository;
+
+import com - ecommerce - inventory - model - Inventory;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+@Repository
+public interface InventoryRepository extends JpaRepository<Inventory, String> {
+}
+
+// application - properties
+spring - application - name=inventory-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Shipping
+can you please provide me a code for Shipping management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Shipping Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// ShippingApplication - java
+package com - ecommerce - shipping;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class ShippingApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(ShippingApplication - class, args);
+    }
+}
+
+// ShippingController - java
+package com - ecommerce - shipping - controller;
+
+import com - ecommerce - shipping - model - Shipping;
+import com - ecommerce - shipping - service - ShippingService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/shipping")
+public class ShippingController {
+
+    @Autowired
+    private ShippingService shippingService;
+
+    // Create a new shipping record
+    @PostMapping("/create")
+    public ResponseEntity<Shipping> createShipping(@RequestBody Shipping shipping) {
+        return ResponseEntity - ok(shippingService - createShipping(shipping));
+    }
+
+    // Get shipping details by order ID
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<Shipping> getShippingByOrderId(@PathVariable String orderId) {
+        return ResponseEntity - ok(shippingService - getShippingByOrderId(orderId));
+    }
+
+    // Update shipping status
+    @PutMapping("/update/status/{orderId}")
+    public ResponseEntity<Shipping> updateShippingStatus(@PathVariable String orderId, @RequestParam String status) {
+        return ResponseEntity - ok(shippingService - updateShippingStatus(orderId, status));
+    }
+
+    // Get all shipping records
+    @GetMapping("/all")
+    public ResponseEntity<List<Shipping>> getAllShippingRecords() {
+        return ResponseEntity - ok(shippingService - getAllShippingRecords());
+    }
+}
+
+// ShippingService - java
+package com - ecommerce - shipping - service;
+
+import com - ecommerce - shipping - model - Shipping;
+import com - ecommerce - shipping - repository - ShippingRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class ShippingService {
+
+    @Autowired
+    private ShippingRepository shippingRepository;
+
+    public Shipping createShipping(Shipping shipping) {
+        return shippingRepository - save(shipping);
+    }
+
+    public Shipping getShippingByOrderId(String orderId) {
+        return shippingRepository - findByOrderId(orderId) - orElseThrow(() -> new RuntimeException("Shipping record not found"));
+    }
+
+    public Shipping updateShippingStatus(String orderId, String status) {
+        Shipping shipping = getShippingByOrderId(orderId);
+        shipping - setStatus(status);
+        return shippingRepository - save(shipping);
+    }
+
+    public List<Shipping> getAllShippingRecords() {
+        return shippingRepository - findAll();
+    }
+}
+
+// Shipping - java (Entity)
+package com - ecommerce - shipping - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "shipping")
+public class Shipping {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String orderId;
+
+    @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false)
+    private String status; // e - g - , Pending, Shipped, Delivered
+
+    @Column(nullable = false)
+    private String estimatedDeliveryDate;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this orderId = orderId;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this address = address;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this status = status;
+    }
+
+    public String getEstimatedDeliveryDate() {
+        return estimatedDeliveryDate;
+    }
+
+    public void setEstimatedDeliveryDate(String estimatedDeliveryDate) {
+        this estimatedDeliveryDate = estimatedDeliveryDate;
+    }
+}
+
+// ShippingRepository - java
+package com - ecommerce - shipping - repository;
+
+import com - ecommerce - shipping - model - Shipping;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+import java - util - Optional;
+
+@Repository
+public interface ShippingRepository extends JpaRepository<Shipping, Long> {
+    Optional<Shipping> findByOrderId(String orderId);
+}
+
+// application - properties
+spring - application - name=shipping-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Cart
+can you please provide me a code for cart management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Cart Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// CartApplication - java
+package com - ecommerce - cart;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class CartApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(CartApplication - class, args);
+    }
+}
+
+// CartController - java
+package com - ecommerce - cart - controller;
+
+import com - ecommerce - cart - model - CartItem;
+import com - ecommerce - cart - service - CartService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/cart")
+public class CartController {
+
+    @Autowired
+    private CartService cartService;
+
+    // Add an item to the cart
+    @PostMapping("/add")
+    public ResponseEntity<CartItem> addItemToCart(@RequestBody CartItem cartItem) {
+        return ResponseEntity - ok(cartService - addItemToCart(cartItem));
+    }
+
+    // Get all items in the cart for a user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<CartItem>> getCartItemsByUserId(@PathVariable String userId) {
+        return ResponseEntity - ok(cartService - getCartItemsByUserId(userId));
+    }
+
+    // Update the quantity of a cart item
+    @PutMapping("/update/quantity/{cartItemId}")
+    public ResponseEntity<CartItem> updateCartItemQuantity(@PathVariable Long cartItemId, @RequestParam int quantity) {
+        return ResponseEntity - ok(cartService - updateCartItemQuantity(cartItemId, quantity));
+    }
+
+    // Remove an item from the cart
+    @DeleteMapping("/remove/{cartItemId}")
+    public ResponseEntity<String> removeCartItem(@PathVariable Long cartItemId) {
+        cartService - removeCartItem(cartItemId);
+        return ResponseEntity - ok("Cart item removed successfully");
+    }
+
+    // Clear all items in the cart for a user
+    @DeleteMapping("/clear/{userId}")
+    public ResponseEntity<String> clearCart(@PathVariable String userId) {
+        cartService - clearCart(userId);
+        return ResponseEntity - ok("Cart cleared successfully");
+    }
+}
+
+// CartService - java
+package com - ecommerce - cart - service;
+
+import com - ecommerce - cart - model - CartItem;
+import com - ecommerce - cart - repository - CartRepository;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - List;
+
+@Service
+public class CartService {
+
+    @Autowired
+    private CartRepository cartRepository;
+
+    public CartItem addItemToCart(CartItem cartItem) {
+        return cartRepository - save(cartItem);
+    }
+
+    public List<CartItem> getCartItemsByUserId(String userId) {
+        return cartRepository - findByUserId(userId);
+    }
+
+    public CartItem updateCartItemQuantity(Long cartItemId, int quantity) {
+        CartItem cartItem = cartRepository - findById(cartItemId) - orElseThrow(() -> new RuntimeException("Cart item not found"));
+        cartItem - setQuantity(quantity);
+        return cartRepository - save(cartItem);
+    }
+
+    public void removeCartItem(Long cartItemId) {
+        cartRepository - deleteById(cartItemId);
+    }
+
+    public void clearCart(String userId) {
+        cartRepository - deleteByUserId(userId);
+    }
+}
+
+// CartItem - java (Entity)
+package com - ecommerce - cart - model;
+
+import jakarta - persistence - *;
+
+@Entity
+@Table(name = "cart_items")
+public class CartItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType - IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
+    private String userId;
+
+    @Column(nullable = false)
+    private String itemId;
+
+    @Column(nullable = false)
+    private String itemName;
+
+    @Column(nullable = false)
+    private int quantity;
+
+    @Column(nullable = false)
+    private double price;
+
+    // Getters and Setters
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this userId = userId;
+    }
+
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this itemId = itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+
+    public void setItemName(String itemName) {
+        this itemName = itemName;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this quantity = quantity;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this price = price;
+    }
+}
+
+// CartRepository - java
+package com - ecommerce - cart - repository;
+
+import com - ecommerce - cart - model - CartItem;
+import org - springframework - data - jpa - repository - JpaRepository;
+import org - springframework - stereotype - Repository;
+
+import java - util - List;
+
+@Repository
+public interface CartRepository extends JpaRepository<CartItem, Long> {
+    List<CartItem> findByUserId(String userId);
+
+    void deleteByUserId(String userId);
+}
+
+// application - properties
+spring - application - name=cart-service
+server - port=8081
+
+# Database Configuration
+spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+spring - datasource - username=root
+spring - datasource - password=root
+spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+------------------------------------------------------------------------------------
+#Search
+can you please provide me a code for Search management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Search Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// SearchApplication - java
+package com - ecommerce - search;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class SearchApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(SearchApplication - class, args);
+    }
+}
+
+// SearchController - java
+package com - ecommerce - search - controller;
+
+import com - ecommerce - search - model - SearchResult;
+import com - ecommerce - search - service - SearchService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/search")
+public class SearchController {
+
+    @Autowired
+    private SearchService searchService;
+
+    // Search for restaurants
+    @GetMapping("/restaurants")
+    public ResponseEntity<List<SearchResult>> searchRestaurants(@RequestParam String query) {
+        return ResponseEntity - ok(searchService - searchRestaurants(query));
+    }
+
+    // Search for menu items
+    @GetMapping("/menus")
+    public ResponseEntity<List<SearchResult>> searchMenus(@RequestParam String query) {
+        return ResponseEntity - ok(searchService - searchMenus(query));
+    }
+}
+
+// SearchService - java
+package com - ecommerce - search - service;
+
+import com - ecommerce - search - model - SearchResult;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+
+@Service
+public class SearchService {
+
+    // Mock implementation for searching restaurants
+    public List<SearchResult> searchRestaurants(String query) {
+        // In a real-world application, this would query Elasticsearch or another search engine - 
+        List<SearchResult> results = new ArrayList<>();
+        results add(new SearchResult("1", "Pizza Palace", "Best pizzas in town"));
+        results add(new SearchResult("2", "Burger Barn", "Delicious burgers and sides"));
+        return results;
+    }
+
+    // Mock implementation for searching menu items
+    public List<SearchResult> searchMenus(String query) {
+        // In a real-world application, this would query Elasticsearch or another search engine - 
+        List<SearchResult> results = new ArrayList<>();
+        results add(new SearchResult("1", "Pepperoni Pizza", "A classic pepperoni pizza"));
+        results add(new SearchResult("2", "Veggie Burger", "Healthy and tasty veggie burger"));
+        return results;
+    }
+}
+
+// SearchResult - java (Model)
+package com - ecommerce - search - model;
+
+public class SearchResult {
+
+    private String id;
+    private String name;
+    private String description;
+
+    // Constructors
+    public SearchResult(String id, String name, String description) {
+        this id = id;
+        this name = name;
+        this description = description;
+    }
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this description = description;
+    }
+}
+
+// application - properties
+spring - application - name=search-service
+server - port=8081
+
+# Database Configuration (if needed for additional search metadata)
+# spring - datasource - url=jdbc:mysql://localhost:3306/ecommerce
+# spring - datasource - username=root
+# spring - datasource - password=root
+# spring - jpa - hibernate - ddl-auto=update
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+
+# Elasticsearch Configuration (optional for real search capabilities)
+# spring - elasticsearch - uris=http://localhost:9200
+-----------------------------------------------------------------------------
+
+#Menu
+can you please provide me a code for Menu management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Menu Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// MenuApplication - java
+package com - ecommerce - menu;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class MenuApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(MenuApplication - class, args);
+    }
+}
+
+// MenuController - java
+package com - ecommerce - menu - controller;
+
+import com - ecommerce - menu - model - MenuItem;
+import com - ecommerce - menu - service - MenuService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/menu")
+public class MenuController {
+
+    @Autowired
+    private MenuService menuService;
+
+    // Get all menu items for a restaurant
+    @GetMapping("/{restaurantId}")
+    public ResponseEntity<List<MenuItem>> getMenuByRestaurant(@PathVariable String restaurantId) {
+        return ResponseEntity - ok(menuService - getMenuByRestaurant(restaurantId));
+    }
+
+    // Add a new menu item
+    @PostMapping("/{restaurantId}")
+    public ResponseEntity<MenuItem> addMenuItem(@PathVariable String restaurantId, @RequestBody MenuItem menuItem) {
+        return ResponseEntity - ok(menuService - addMenuItem(restaurantId, menuItem));
+    }
+
+    // Update a menu item
+    @PutMapping("/{restaurantId}/{itemId}")
+    public ResponseEntity<MenuItem> updateMenuItem(@PathVariable String restaurantId, @PathVariable String itemId, @RequestBody MenuItem menuItem) {
+        return ResponseEntity - ok(menuService - updateMenuItem(restaurantId, itemId, menuItem));
+    }
+
+    // Delete a menu item
+    @DeleteMapping("/{restaurantId}/{itemId}")
+    public ResponseEntity<String> deleteMenuItem(@PathVariable String restaurantId, @PathVariable String itemId) {
+        menuService - deleteMenuItem(restaurantId, itemId);
+        return ResponseEntity - ok("Menu item deleted successfully");
+    }
+}
+
+// MenuService - java
+package com - ecommerce - menu - service;
+
+import com - ecommerce - menu - model - MenuItem;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+import java - util - stream - Collectors;
+
+@Service
+public class MenuService {
+
+    private List<MenuItem> menuItems = new ArrayList<>();
+
+    // Get menu by restaurant
+    public List<MenuItem> getMenuByRestaurant(String restaurantId) {
+        return menuItems stream()
+                 - filter(menuItem -> menuItem - getRestaurantId() - equals(restaurantId))
+                 - collect(Collectors toList());
+    }
+
+    // Add a new menu item
+    public MenuItem addMenuItem(String restaurantId, MenuItem menuItem) {
+        menuItem - setRestaurantId(restaurantId);
+        menuItems add(menuItem);
+        return menuItem;
+    }
+
+    // Update a menu item
+    public MenuItem updateMenuItem(String restaurantId, String itemId, MenuItem menuItem) {
+        deleteMenuItem(restaurantId, itemId);
+        menuItem - setRestaurantId(restaurantId);
+        menuItem - setItemId(itemId);
+        menuItems add(menuItem);
+        return menuItem;
+    }
+
+    // Delete a menu item
+    public void deleteMenuItem(String restaurantId, String itemId) {
+        menuItems removeIf(menuItem -> menuItem - getRestaurantId() - equals(restaurantId) && menuItem - getItemId() - equals(itemId));
+    }
+}
+
+// MenuItem - java (Model)
+package com - ecommerce - menu - model;
+
+public class MenuItem {
+
+    private String itemId;
+    private String restaurantId;
+    private String name;
+    private String description;
+    private double price;
+
+    // Constructors
+    public MenuItem() {
+    }
+
+    public MenuItem(String itemId, String restaurantId, String name, String description, double price) {
+        this itemId = itemId;
+        this restaurantId = restaurantId;
+        this name = name;
+        this description = description;
+        this price = price;
+    }
+
+    // Getters and Setters
+    public String getItemId() {
+        return itemId;
+    }
+
+    public void setItemId(String itemId) {
+        this itemId = itemId;
+    }
+
+    public String getRestaurantId() {
+        return restaurantId;
+    }
+
+    public void setRestaurantId(String restaurantId) {
+        this restaurantId = restaurantId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this description = description;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this price = price;
+    }
+}
+
+// application - properties
+spring - application - name=menu-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+-----------------------------------------------------------------------------------------
+
+#Recommendations
+can you please provide me a code for Recommendations management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Recommendations Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// RecommendationsApplication - java
+package com - ecommerce - recommendations;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class RecommendationsApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(RecommendationsApplication - class, args);
+    }
+}
+
+// RecommendationsController - java
+package com - ecommerce - recommendations controller;
+
+import com - ecommerce - recommendations model - Recommendation;
+import com - ecommerce - recommendations service - RecommendationsService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/recommendations")
+public class RecommendationsController {
+
+    @Autowired
+    private RecommendationsService recommendationsService;
+
+    // Get recommendations for a user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Recommendation>> getRecommendationsForUser(@PathVariable String userId) {
+        return ResponseEntity - ok(recommendationsService - getRecommendationsForUser(userId));
+    }
+
+    // Add a new recommendation
+    @PostMapping
+    public ResponseEntity<Recommendation> addRecommendation(@RequestBody Recommendation recommendation) {
+        return ResponseEntity - ok(recommendationsService - addRecommendation(recommendation));
+    }
+
+    // Update a recommendation
+    @PutMapping("/{recommendationId}")
+    public ResponseEntity<Recommendation> updateRecommendation(@PathVariable String recommendationId, @RequestBody Recommendation recommendation) {
+        return ResponseEntity - ok(recommendationsService - updateRecommendation(recommendationId, recommendation));
+    }
+
+    // Delete a recommendation
+    @DeleteMapping("/{recommendationId}")
+    public ResponseEntity<String> deleteRecommendation(@PathVariable String recommendationId) {
+        recommendationsService - deleteRecommendation(recommendationId);
+        return ResponseEntity - ok("Recommendation deleted successfully");
+    }
+}
+
+// RecommendationsService - java
+package com - ecommerce - recommendations service;
+
+import com - ecommerce - recommendations model - Recommendation;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+import java - util - stream - Collectors;
+
+@Service
+public class RecommendationsService {
+
+    private List<Recommendation> recommendations = new ArrayList<>();
+
+    // Get recommendations for a user
+    public List<Recommendation> getRecommendationsForUser(String userId) {
+        return recommendations stream()
+                 - filter(recommendation -> recommendation - getUserId() - equals(userId))
+                 - collect(Collectors toList());
+    }
+
+    // Add a new recommendation
+    public Recommendation addRecommendation(Recommendation recommendation) {
+        recommendations add(recommendation);
+        return recommendation;
+    }
+
+    // Update a recommendation
+    public Recommendation updateRecommendation(String recommendationId, Recommendation recommendation) {
+        deleteRecommendation(recommendationId);
+        recommendation - setId(recommendationId);
+        recommendations add(recommendation);
+        return recommendation;
+    }
+
+    // Delete a recommendation
+    public void deleteRecommendation(String recommendationId) {
+        recommendations removeIf(recommendation -> recommendation - getId() - equals(recommendationId));
+    }
+}
+
+// Recommendation - java (Model)
+package com - ecommerce - recommendations model;
+
+public class Recommendation {
+
+    private String id;
+    private String userId;
+    private String productId;
+    private String productName;
+    private String description;
+
+    // Constructors
+    public Recommendation() {
+    }
+
+    public Recommendation(String id, String userId, String productId, String productName, String description) {
+        this id = id;
+        this userId = userId;
+        this productId = productId;
+        this productName = productName;
+        this description = description;
+    }
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this userId = userId;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this productName = productName;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this description = description;
+    }
+}
+
+// application - properties
+spring - application - name=recommendations-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+------------------------------------------------------------------------------------------
+
+#Review & Rating
+can you please provide me a code for Review & Rating management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Review & Rating Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// ReviewRatingApplication - java
+package com - ecommerce - reviewrating;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class ReviewRatingApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(ReviewRatingApplication - class, args);
+    }
+}
+
+// ReviewRatingController - java
+package com - ecommerce - reviewrating - controller;
+
+import com - ecommerce - reviewrating - model - ReviewRating;
+import com - ecommerce - reviewrating - service - ReviewRatingService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/reviews")
+public class ReviewRatingController {
+
+    @Autowired
+    private ReviewRatingService reviewRatingService;
+
+    // Get reviews and ratings for a product
+    @GetMapping("/product/{productId}")
+    public ResponseEntity<List<ReviewRating>> getReviewsForProduct(@PathVariable String productId) {
+        return ResponseEntity - ok(reviewRatingService - getReviewsForProduct(productId));
+    }
+
+    // Get reviews and ratings by a user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ReviewRating>> getReviewsByUser(@PathVariable String userId) {
+        return ResponseEntity - ok(reviewRatingService - getReviewsByUser(userId));
+    }
+
+    // Add a new review and rating
+    @PostMapping
+    public ResponseEntity<ReviewRating> addReview(@RequestBody ReviewRating reviewRating) {
+        return ResponseEntity - ok(reviewRatingService - addReview(reviewRating));
+    }
+
+    // Update a review and rating
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewRating> updateReview(@PathVariable String reviewId, @RequestBody ReviewRating reviewRating) {
+        return ResponseEntity - ok(reviewRatingService - updateReview(reviewId, reviewRating));
+    }
+
+    // Delete a review and rating
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<String> deleteReview(@PathVariable String reviewId) {
+        reviewRatingService - deleteReview(reviewId);
+        return ResponseEntity - ok("Review deleted successfully");
+    }
+}
+
+// ReviewRatingService - java
+package com - ecommerce - reviewrating - service;
+
+import com - ecommerce - reviewrating - model - ReviewRating;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+import java - util - stream - Collectors;
+
+@Service
+public class ReviewRatingService {
+
+    private List<ReviewRating> reviewRatings = new ArrayList<>();
+
+    // Get reviews and ratings for a product
+    public List<ReviewRating> getReviewsForProduct(String productId) {
+        return reviewRatings stream()
+                 - filter(review -> review - getProductId() - equals(productId))
+                 - collect(Collectors toList());
+    }
+
+    // Get reviews and ratings by a user
+    public List<ReviewRating> getReviewsByUser(String userId) {
+        return reviewRatings stream()
+                 - filter(review -> review - getUserId() - equals(userId))
+                 - collect(Collectors toList());
+    }
+
+    // Add a new review and rating
+    public ReviewRating addReview(ReviewRating reviewRating) {
+        reviewRatings add(reviewRating);
+        return reviewRating;
+    }
+
+    // Update a review and rating
+    public ReviewRating updateReview(String reviewId, ReviewRating reviewRating) {
+        deleteReview(reviewId);
+        reviewRating - setId(reviewId);
+        reviewRatings add(reviewRating);
+        return reviewRating;
+    }
+
+    // Delete a review and rating
+    public void deleteReview(String reviewId) {
+        reviewRatings removeIf(review -> review - getId() - equals(reviewId));
+    }
+}
+
+// ReviewRating - java (Model)
+package com - ecommerce - reviewrating - model;
+
+public class ReviewRating {
+
+    private String id;
+    private String userId;
+    private String productId;
+    private String reviewText;
+    private int rating;
+
+    // Constructors
+    public ReviewRating() {
+    }
+
+    public ReviewRating(String id, String userId, String productId, String reviewText, int rating) {
+        this id = id;
+        this userId = userId;
+        this productId = productId;
+        this reviewText = reviewText;
+        this rating = rating;
+    }
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this userId = userId;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this productId = productId;
+    }
+
+    public String getReviewText() {
+        return reviewText;
+    }
+
+    public void setReviewText(String reviewText) {
+        this reviewText = reviewText;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this rating = rating;
+    }
+}
+
+// application - properties
+spring - application - name=review-rating-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+--------------------------------------------------------------------------------------
+
+#Wishlist
+can you please provide me a code for Wishlist management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Wishlist Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// WishlistApplication - java
+package com - ecommerce - wishlist;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class WishlistApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(WishlistApplication - class, args);
+    }
+}
+
+// WishlistController - java
+package com - ecommerce - wishlist - controller;
+
+import com - ecommerce - wishlist - model - WishlistItem;
+import com - ecommerce - wishlist - service - WishlistService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/wishlist")
+public class WishlistController {
+
+    @Autowired
+    private WishlistService wishlistService;
+
+    // Get all wishlist items for a user
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<WishlistItem>> getWishlistByUser(@PathVariable String userId) {
+        return ResponseEntity - ok(wishlistService - getWishlistByUser(userId));
+    }
+
+    // Add an item to the wishlist
+    @PostMapping
+    public ResponseEntity<WishlistItem> addWishlistItem(@RequestBody WishlistItem wishlistItem) {
+        return ResponseEntity - ok(wishlistService - addWishlistItem(wishlistItem));
+    }
+
+    // Remove an item from the wishlist
+    @DeleteMapping("/{itemId}")
+    public ResponseEntity<String> removeWishlistItem(@PathVariable String itemId) {
+        wishlistService - removeWishlistItem(itemId);
+        return ResponseEntity - ok("Item removed from wishlist");
+    }
+
+    // Clear the entire wishlist for a user
+    @DeleteMapping("/user/{userId}")
+    public ResponseEntity<String> clearWishlist(@PathVariable String userId) {
+        wishlistService - clearWishlist(userId);
+        return ResponseEntity - ok("Wishlist cleared");
+    }
+}
+
+// WishlistService - java
+package com - ecommerce - wishlist - service;
+
+import com - ecommerce - wishlist - model - WishlistItem;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+import java - util - stream - Collectors;
+
+@Service
+public class WishlistService {
+
+    private List<WishlistItem> wishlistItems = new ArrayList<>();
+
+    // Get all wishlist items for a user
+    public List<WishlistItem> getWishlistByUser(String userId) {
+        return wishlistItems stream()
+                 - filter(item -> item - getUserId() - equals(userId))
+                 - collect(Collectors toList());
+    }
+
+    // Add an item to the wishlist
+    public WishlistItem addWishlistItem(WishlistItem wishlistItem) {
+        wishlistItems add(wishlistItem);
+        return wishlistItem;
+    }
+
+    // Remove an item from the wishlist
+    public void removeWishlistItem(String itemId) {
+        wishlistItems removeIf(item -> item - getId() - equals(itemId));
+    }
+
+    // Clear the entire wishlist for a user
+    public void clearWishlist(String userId) {
+        wishlistItems removeIf(item -> item - getUserId() - equals(userId));
+    }
+}
+
+// WishlistItem - java (Model)
+package com - ecommerce - wishlist - model;
+
+public class WishlistItem {
+
+    private String id;
+    private String userId;
+    private String productId;
+    private String productName;
+
+    // Constructors
+    public WishlistItem() {
+    }
+
+    public WishlistItem(String id, String userId, String productId, String productName) {
+        this id = id;
+        this userId = userId;
+        this productId = productId;
+        this productName = productName;
+    }
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this id = id;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this userId = userId;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this productId = productId;
+    }
+
+    public String getProductName() {
+        return productName;
+    }
+
+    public void setProductName(String productName) {
+        this productName = productName;
+    }
+}
+
+// application - properties
+spring - application - name=wishlist-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+-----------------------------------------------------------------------------------------
+
+#Analytics
+can you please provide me a code for Analytics management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Analytics Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// AnalyticsApplication - java
+package com - ecommerce - analytics;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class AnalyticsApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(AnalyticsApplication - class, args);
+    }
+}
+
+// AnalyticsController - java
+package com - ecommerce - analytics controller;
+
+import com - ecommerce - analytics model - AnalyticsData;
+import com - ecommerce - analytics service - AnalyticsService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+import java - util - List;
+
+@RestController
+@RequestMapping("/analytics")
+public class AnalyticsController {
+
+    @Autowired
+    private AnalyticsService analyticsService;
+
+    // Get sales data
+    @GetMapping("/sales")
+    public ResponseEntity<List<AnalyticsData>> getSalesData() {
+        return ResponseEntity - ok(analyticsService - getSalesData());
+    }
+
+    // Get user engagement data
+    @GetMapping("/engagement")
+    public ResponseEntity<List<AnalyticsData>> getUserEngagementData() {
+        return ResponseEntity - ok(analyticsService - getUserEngagementData());
+    }
+
+    // Get popular items
+    @GetMapping("/popular-items")
+    public ResponseEntity<List<AnalyticsData>> getPopularItems() {
+        return ResponseEntity - ok(analyticsService - getPopularItems());
+    }
+
+    // Add analytics data
+    @PostMapping
+    public ResponseEntity<AnalyticsData> addAnalyticsData(@RequestBody AnalyticsData analyticsData) {
+        return ResponseEntity - ok(analyticsService - addAnalyticsData(analyticsData));
+    }
+}
+
+// AnalyticsService - java
+package com - ecommerce - analytics service;
+
+import com - ecommerce - analytics model - AnalyticsData;
+import org - springframework - stereotype - Service;
+
+import java - util - ArrayList;
+import java - util - List;
+
+@Service
+public class AnalyticsService {
+
+    private List<AnalyticsData> analyticsDataList = new ArrayList<>();
+
+    // Get sales data
+    public List<AnalyticsData> getSalesData() {
+        return filterDataByType("sales");
+    }
+
+    // Get user engagement data
+    public List<AnalyticsData> getUserEngagementData() {
+        return filterDataByType("engagement");
+    }
+
+    // Get popular items
+    public List<AnalyticsData> getPopularItems() {
+        return filterDataByType("popular-items");
+    }
+
+    // Add analytics data
+    public AnalyticsData addAnalyticsData(AnalyticsData analyticsData) {
+        analyticsDataList - add(analyticsData);
+        return analyticsData;
+    }
+
+    // Filter data by type
+    private List<AnalyticsData> filterDataByType(String type) {
+        List<AnalyticsData> filteredData = new ArrayList<>();
+        for (AnalyticsData data : analyticsDataList) {
+            if (data - getType() - equalsIgnoreCase(type)) {
+                filteredData - add(data);
+            }
+        }
+        return filteredData;
+    }
+}
+
+// AnalyticsData - java (Model)
+package com - ecommerce - analytics model;
+
+public class AnalyticsData {
+
+    private String id;
+    private String type;
+    private String description;
+    private double value;
+
+    // Constructors
+    public AnalyticsData() {
+    }
+
+    public AnalyticsData(String id, String type, String description, double value) {
+        this id = id;
+        this type = type;
+        this description = description;
+        this value = value;
+    }
+
+    // Getters and Setters
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this type = type;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this description = description;
+    }
+
+    public double getValue() {
+        return value;
+    }
+
+    public void setValue(double value) {
+        this value = value;
+    }
+}
+
+// application - properties
+spring - application - name=analytics-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+--------------------------------------------------------------------------------------------
+
+#Authentication & Autorization
+can you please provide me a code for authentication & authentication management microservice for ecommerce food delivery on port 8081 with all the functionalities
+
+// Complete Authentication & Authorization Management Microservice for an eCommerce Food Delivery Application on Port 8081
+
+// AuthApplication - java
+package com - ecommerce - auth;
+
+import org - springframework - boot - SpringApplication;
+import org - springframework - boot - autoconfigure - SpringBootApplication;
+import org - springframework - cloud - netflix - eureka - EnableEurekaClient;
+
+@SpringBootApplication
+@EnableEurekaClient
+public class AuthApplication {
+    public static void main(String[] args) {
+        SpringApplication - run(AuthApplication - class, args);
+    }
+}
+
+// AuthController - java
+package com - ecommerce - auth - controller;
+
+import com - ecommerce - auth - model - AuthRequest;
+import com - ecommerce - auth - model - AuthResponse;
+import com - ecommerce - auth - service - AuthService;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - http - ResponseEntity;
+import org - springframework - web - bind - annotation - *;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    @Autowired
+    private AuthService authService;
+
+    // Register user
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> registerUser(@RequestBody AuthRequest request) {
+        return ResponseEntity - ok(authService - registerUser(request));
+    }
+
+    // Authenticate user
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody AuthRequest request) {
+        return ResponseEntity - ok(authService - authenticateUser(request));
+    }
+
+    // Validate token
+    @GetMapping("/validate")
+    public ResponseEntity<Boolean> validateToken(@RequestParam String token) {
+        return ResponseEntity - ok(authService - validateToken(token));
+    }
+}
+
+// AuthService - java
+package com - ecommerce - auth - service;
+
+import com - ecommerce - auth - model - AuthRequest;
+import com - ecommerce - auth - model - AuthResponse;
+import com - ecommerce - auth - util - JwtUtil;
+import org - springframework - beans factory - annotation - Autowired;
+import org - springframework - stereotype - Service;
+
+import java - util - HashMap;
+import java - util - Map;
+
+@Service
+public class AuthService {
+
+    private Map<String, String> userStore = new HashMap<>(); // Simulated user store
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // Register user
+    public AuthResponse registerUser(AuthRequest request) {
+        if (userStore - containsKey(request - getUsername())) {
+            throw new RuntimeException("User already exists");
+        }
+        userStore - put(request - getUsername(), request - getPassword());
+        return new AuthResponse("User registered successfully", null);
+    }
+
+    // Authenticate user
+    public AuthResponse authenticateUser(AuthRequest request) {
+        if (!userStore - containsKey(request - getUsername()) ||
+            !userStore - get(request - getUsername()) - equals(request - getPassword())) {
+            throw new RuntimeException("Invalid username or password");
+        }
+        String token = jwtUtil - generateToken(request - getUsername());
+        return new AuthResponse("Authentication successful", token);
+    }
+
+    // Validate token
+    public Boolean validateToken(String token) {
+        return jwtUtil - validateToken(token);
+    }
+}
+
+// AuthRequest - java
+package com - ecommerce - auth - model;
+
+public class AuthRequest {
+
+    private String username;
+    private String password;
+
+    // Constructors
+    public AuthRequest() {
+    }
+
+    public AuthRequest(String username, String password) {
+        this username = username;
+        this password = password;
+    }
+
+    // Getters and Setters
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this password = password;
+    }
+}
+
+// AuthResponse - java
+package com - ecommerce - auth - model;
+
+public class AuthResponse {
+
+    private String message;
+    private String token;
+
+    // Constructors
+    public AuthResponse() {
+    }
+
+    public AuthResponse(String message, String token) {
+        this message = message;
+        this token = token;
+    }
+
+    // Getters and Setters
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this message = message;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this token = token;
+    }
+}
+
+// JwtUtil - java
+package com - ecommerce - auth - util;
+
+import io - jsonwebtoken - Claims;
+import io - jsonwebtoken - Jwts;
+import io - jsonwebtoken - SignatureAlgorithm;
+import org - springframework - stereotype - Component;
+
+import java - util - Date;
+
+@Component
+public class JwtUtil {
+
+    private String SECRET_KEY = "secret";
+
+    public String generateToken(String username) {
+        return Jwts builder()
+                 - setSubject(username)
+                 - setIssuedAt(new Date())
+                 - setExpiration(new Date(System - currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                 - signWith(SignatureAlgorithm - HS256, SECRET_KEY)
+                 - compact();
+    }
+
+    public Boolean validateToken(String token) {
+        try {
+            Jwts parser() - setSigningKey(SECRET_KEY) - parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public String extractUsername(String token) {
+        Claims claims = Jwts parser() - setSigningKey(SECRET_KEY) - parseClaimsJws(token) - getBody();
+        return claims getSubject();
+    }
+}
+
+// application - properties
+spring - application - name=auth-service
+server - port=8081
+
+# Eureka Configuration
+eureka - client - service-url - default-zone=http://localhost:8761/eureka/
+-------------------------------------------------------------------------------------------------------------
+
+#Design Flow of Ecomm:
+
+
+
+Here’s a **detailed design flow** for your **food delivery application**, covering individual apps (**User, Restaurant, Delivery, Admin**) and essential **services**.
+
+---
+
+# **📌 1. User App (Customer) - Flow**
+This app allows customers to **browse restaurants, order food, track deliveries, and make payments**.
+
+### **🔹 User Journey Flow**
+1️⃣ **Splash Screen** → App logo animation  
+2️⃣ **User Registration/Login** (`#Authentication & Authorization`)  
+   - Email/Phone Number Login  
+   - Social Login (Google, Facebook)  
+   
+3️⃣ **Home Page (`#Menu/Home, #Recommendations`)**  
+   - Featured restaurants & trending dishes  
+   - Search bar (`#Search`)  
+   - Filter by cuisine, price, ratings 
+   
+4️⃣ **Restaurant Page (`#Restaurant`)**  
+   - Menu items (`#Product`)  
+   - Ratings & Reviews (`#Review & Rating`)  
+   - Add to Favorites (`#Favourite`)  
+   
+5️⃣ **Cart Page (`#Cart`)**  
+   - Modify quantity, apply coupons  
+   - Delivery & tax details 
+   
+6️⃣ **Checkout & Payment (`#Payment`)**  
+   - Select payment method (Card, UPI, COD)  
+   - Order Summary & Discount Coupons  
+   
+7️⃣ **Order Tracking (`#Order, #Shipping, #Notification`)**  
+   - Order status (Confirmed, Preparing, Out for Delivery)  
+   - Live tracking of delivery agent  
+   - Push notifications  
+   
+8️⃣ **Order Completion & Review (`#Review & Rating`)**  
+   - Rate restaurant & delivery  
+   - Provide feedback  
+   
+9️⃣ **User Profile & Wishlist (`#Wishlist`)**  
+   - View past orders  
+   - Manage addresses & payment options  
+   - Wishlist saved items  
+
+---
+
+# **📌 2. Restaurant App - Flow**
+This app allows **restaurant managers** to manage orders, food menus, and business analytics.
+
+### **🔹 Restaurant Journey Flow**
+1️⃣ **Restaurant Login (`#Authentication & Authorization`)**  
+   - Email & password-based login  
+   
+2️⃣ **Dashboard (`#Analytics`)**  
+   - Total orders, revenue, pending deliveries  
+   
+3️⃣ **Manage Menu (`#Product, #Inventory`)**  
+   - Add/Edit/Delete food items  
+   - Update prices & availability  
+   
+4️⃣ **Incoming Orders (`#Order`)**  
+   - Accept/Reject Orders  
+   - Track order preparation status  
+   
+5️⃣ **Assign Delivery Partner (`#Delivery`)**  
+   - View available delivery agents  
+   - Assign an agent or auto-assign  
+   
+6️⃣ **Payment Transactions (`#Payment`)**  
+   - Track received & pending payments  
+   - Withdraw revenue  
+   
+7️⃣ **Customer Feedback (`#Review & Rating`)**  
+   - View customer reviews  
+   - Reply to feedback  
+   
+8️⃣ **Promotions & Offers (`#Notification`)**  
+   - Create discount coupons  
+   - Send promotional notifications  
+
+---
+
+# **📌 3. Delivery App - Flow**
+This app helps **delivery agents** manage order pickups and deliveries.
+
+### **🔹 Delivery Journey Flow**
+1️⃣ **Delivery Agent Login (`#Authentication & Authorization`)**  
+   - Verified agent login  
+   
+2️⃣ **Available Orders (`#Order`)**  
+   - List of available deliveries  
+   - Accept/Reject requests
+   
+3️⃣ **Navigate to Restaurant (`#Shipping`)**  
+   - GPS-based navigation  
+   - Pickup order confirmation  
+   
+4️⃣ **Navigate to Customer Location (`#Shipping`)**  
+   - Real-time tracking  
+   - Contactless delivery option  
+   
+5️⃣ **Complete Delivery (`#Order, #Payment`)**  
+   - Mark as "Delivered"  
+   - Collect cash (if COD)
+   
+6️⃣ **Earnings & Performance Tracking (`#Analytics`)**  
+   - Daily earnings report  
+   - Customer ratings  
+
+---
+
+# **📌 4. Admin App - Flow**
+This app allows **platform admins** to monitor the system.
+
+### **🔹 Admin Journey Flow**
+1️⃣ **Admin Login (`#Authentication & Authorization`)**  
+   - Secure login  
+   
+2️⃣ **Dashboard (`#Analytics`)**  
+   - Order stats, revenue, active users 
+   
+3️⃣ **Manage Restaurants (`#Restaurant`)**  
+   - Approve/reject restaurant registrations  
+   - Monitor restaurant performance  
+   
+4️⃣ **Manage Users (`#User`)**  
+   - View user activity  
+   - Handle complaints & bans  
+   
+5️⃣ **Manage Delivery Partners (`#Delivery`)**  
+   - Approve drivers  
+   - Track active deliveries 
+   
+6️⃣ **Manage Payments (`#Payment`)**  
+   - View revenue & pending settlements  
+   - Handle refund requests  
+   
+7️⃣ **System Analytics (`#Analytics`)**  
+   - Revenue trends  
+   - Customer behavior reports  
+   
+8️⃣ **Push Notifications (`#Notification`)**  
+   - Send system-wide alerts  
+
+---
+
+# **📌 5. Microservices & API Design**
+Here’s how the **microservices** fit into the system:
+
+### **🔹 Microservices Breakdown**
+| **Service** | **Responsibility** |
+|------------|-------------------|
+| `#User` | Handles customer profiles, authentication |
+
+| `#Admin` | Manages users, restaurants, and payments |
+
+| `#Restaurant` | Handles restaurant data & menu |
+
+| `#Product` | Manages food items & inventory |
+
+| `#Order` | Handles order placement & tracking |
+
+| `#Favourite` | Manages saved restaurants & items |
+
+| `#Delivery` | Assigns orders to drivers, tracking |
+
+| `#Payment` | Handles payments & refunds |
+
+| `#Notification` | Sends order updates, promos |
+
+| `#Inventory` | Manages stock availability |
+
+| `#Shipping` | Handles order dispatch & tracking |
+
+| `#Cart` | Manages user shopping cart |
+
+| `#Search` | Provides restaurant & food search |
+
+| `#Recommendations` | AI-based food suggestions |
+
+| `#Review & Rating` | Manages user feedback |
+
+| `#Wishlist` | Saves user preferences |
+
+| `#Analytics` | Generates business reports |
+
+| `#Authentication & Authorization` | Handles user logins & security |
+
+---
+
+# **📌 6. Tech Stack for Each Module**
+| **Component** | **Technology** |
+|--------------|--------------|
+| **Frontend (Web & Mobile)** | React.js, React Native |
+| **Backend (Microservices)** | Spring Boot |
+| **Database** | MySQL, PostgreSQL |
+| **API Gateway** | Spring Cloud Gateway |
+| **Service Discovery** | Eureka |
+| **Message Queues (Async Ops)** | Kafka, RabbitMQ |
+| **Push Notifications** | Firebase |
+| **Authentication** | JWT, OAuth2 |
+| **Payment Integration** | Stripe, Razorpay, PayPal |
+
+---
+
+### **🚀 Summary**
+| **App** | **Key Features** |
+|---------|-----------------|
+| **User App** | Browse, Order, Track, Pay, Review |
+| **Restaurant App** | Manage Orders, Menu, Delivery |
+| **Delivery App** | Accept Orders, Navigate, Deliver |
+| **Admin App** | Monitor Everything, Approve, Manage |
+
+🚀 This **modular design** ensures **scalability, maintainability, and efficiency**!  
+Would you like **detailed API endpoints** or a **database schema** next? 😊
